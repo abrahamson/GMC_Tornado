@@ -20,7 +20,7 @@ c     Last modified: 8/15   ggm_wt
       real*8 hazmean(MAX_INTEN), hazmean1(MAX_ATTENTYPE,MAX_INTEN)
       integer nProb, nSite, iSite
  
-      real lgTestInten(MAX_INTEN)
+      real lgTestInten(MAX_INTEN), period
 
       real sum
       integer iPer, nAttenType
@@ -37,7 +37,7 @@ c     Last modified: 8/15   ggm_wt
       write (*,*) '*************************'
       write (*,*) '* Tornado Code for GMC *'
       write (*,*) '*  compatible with Haz45j  *'
-      write (*,*) '*    Sep, 2015, NAA     *'
+      write (*,*) '*    , 2015, NAA     *'
       write (*,*) '*************************'
 
       write (*,*) 'Enter the input filename.'
@@ -50,23 +50,17 @@ c     Last modified: 8/15   ggm_wt
       read (31,*) Hazlevel
  
 c     Read Input File
-      call RdInput ( nInten,  testInten, lgTestInten, nGM_model, nattentype, attenType, nProb, iPer, gm_wt)
-
-      read (31,'( a80)') dummy        
-      read (31,'( a80)') dummy 
-      write (*,'( a80)') dummy
-      write (*,'( i5)') iper
+      call RdInput ( nInten,  testInten, lgTestInten, nGM_model, nattentype, 
+     1       attenType, nProb, iPer, gm_wt, period)
 
       nNode_GMC = nAttenType*4
 c     read the weights for the GMC logic tree (for each attenTYpe)
       do iNode=1,nNode_GMC
         read (31,*) nBR_GMC(iNode), (wt_tree(iNode,iBR), iBR=1,nBR_GMC(iNode))
-      enddo     
-
+      enddo
         
 c     Read in the nodes for GMC as given in the input file
       read (31,'( a80)') dummy        
-      write (*,'( a80)') dummy
       do iAttenType=1,nAttenType
        do j=1, nGM_model(iPer, iAttenType) 
 c        read Median branch, epistemic branch, sigma branch
@@ -78,6 +72,11 @@ c        read Median branch, epistemic branch, sigma branch
       read (31,'( a80)') file1
       write (*,'( a80)') file1
       open (43,file=file1,status='unknown')
+      write (43,'( ''GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture'')')
+      write (43,'( 2x,''period index, period: '',i5, f10.4)') iPer, period
+      write (43,'( 2x,''Min contribution to GM uncertainty: '',f10.5)') contrib_min
+      write (43,'( 2x,''Hazard level: '',e12.4)') Hazlevel
+      write (43,'( 2x,''Site, Node, GM ratios...'')')
 
       read (31,*) nSite
       write (*,'( i5)') nSite
@@ -146,7 +145,6 @@ c        Reset the weight for the selected branch to unity and the others to zer
             do iBR4=1,nBR_GMC(4+jj)
               jAtten = kAtten(iAttenType,iBR1,iBR2,iBR3,iBR4)
 c              write (*,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
-c              pause 'iAtten'
               
               iNode1 = iNode - ( (iNode-1)/4) * 4
               jj = (iAttenType-1) * 4
@@ -214,7 +212,7 @@ c                   write (*,'( 4i5,2e12.4)') iNode, iBR, iInten, ktype, haz1(iI
 c       Write out sensitivity hazard curves for GMC
         read (31,'( a80)') file1
         open (42,file=file1,status='unknown')
-        write (42,'( ''SSC Nodes: 1 = Median, 2=Epistemic, 3=Sigma'')')
+        write (42,'( ''GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture'')')
 
         write (42,'( 2x,'' Z values:'')')
         write(42,'(6x,25f12.4)') (testInten(J2),J2=1,nInten)
@@ -276,7 +274,7 @@ c         Check if the range is large enought to be relevant
               if ( GM_ratio(iBR) .lt. ratio1 .or. GM_ratio(iBR) .gt. ratio2 ) iFlag = 1         
             endif
           enddo
-          if ( iFlag .eq. 1 ) write (43,'( 6x, 2i5,25e12.4)') iSite, iNode,  (GM_ratio(iBR), iBR=1,k)
+          if ( iFlag .eq. 1 ) write (43,'( 6x, 2i5,25f10.3)') iSite, iNode,  (GM_ratio(iBR), iBR=1,k)
          enddo
 
  1000 continue

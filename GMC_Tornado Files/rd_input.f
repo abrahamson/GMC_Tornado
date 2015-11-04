@@ -1,6 +1,7 @@
 c -------------------------------------------------------------------------
 
-      subroutine RdInput (nInten,  testInten, lgTestInten, nGM_model, nattentype, attenType, nProb, iPer, wt_GM1)
+      subroutine RdInput (nInten,  testInten, lgTestInten, nGM_model, nattentype,
+     1 attenType, nProb, iPer, wt_GM1, period)
 
       include 'tornado.h'
 
@@ -76,7 +77,7 @@ c         Check for Max number of attenuation model
           call checkDim ( nGM_model(iProb,j), MAX_ATTEN, 'MAX_ATTEN' )
 
           do jj=1,nGM_model(iProb,j)
-            read (20,*) jcalc(j,jj), c1, c2, wtgm(j,jj), iMix, Varadd
+            read (20,*) jcalc(j,jj), c1, c2, wtgm(j,jj), Varadd, iMix
 c            if ( jCalc(j,jj) .lt. 0 ) then
 c               backspace (20)
 c               read (20,*) jcalc(j,jj), c1, c2, wtgm(j,jj), Varadd, sCalc(j,jj), sigfix(j,jj), sssCalc(j,jj)
@@ -86,6 +87,7 @@ c            endif
 
 c       keep the weights for the selected problem only
         if ( iper .eq. iProb) then 
+          period = specT
           do j=1,nattentype
             do jj=1,nGM_model(iProb,j)
               Wt_GM1(j,jj) = Wtgm(j,jj)
