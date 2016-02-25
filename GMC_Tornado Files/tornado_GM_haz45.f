@@ -174,7 +174,7 @@ c              write (*,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
             endif
             
             if ( iNode1 .eq. 4) then
-              if ( iBR3 .eq. iBR ) then
+              if ( iBR4 .eq. iBR ) then
                wt1(iAttenType,jAtten) = wt_tree(jj+1,iBR1)*wt_tree(jj+2,iBR2)*wt_tree(jj+3,iBR3)
               else
                wt1(iAttenType,jAtten) = 0.
