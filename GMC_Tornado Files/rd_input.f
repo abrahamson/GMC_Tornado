@@ -6,21 +6,15 @@ c -------------------------------------------------------------------------
       include 'tornado.h'
 
       real testInten(MAX_INTEN)
-      real segModelWt(1), probAct(1), minlat,maxlat,minlong,maxlong,maxdist
+      real minlat,maxlat,minlong,maxlong,maxdist
       integer nInten, ntotal, attentype(MAX_FLT)
-      integer iii
-      integer jCalc(MAX_ATTENTYPE,MAX_ATTEN),  sssCalc(MAX_ATTENTYPE,MAX_ATTEN), scalc(MAX_ATTENTYPE,MAX_ATTEN)
-      real sigFix(MAX_ATTENTYPE,MAX_ATTEN)
+      integer jCalc(MAX_ATTENTYPE,MAX_ATTEN)
 
-      character*80 filein, title, fname(1), dummy
-      integer nfiles, ix(MAX_FILES)
-      integer nWidth(MAX_FLT)
+      character*80 filein, title
+      integer nfiles
 
-      integer nMagBins, nDistBins, nEpsBins, nXcostBins, soilampflag
-      real magBins(MAX_MAG), distBins(MAX_DIST), epsBins(MAX_EPS)
-      real XcostBins(MAX_XCOST)
       integer nProb, nattentype, nGM_Model(MAX_PROB,MAX_ATTENTYPE)
-      real testwt, checkwt, c1, c2, wtgm(MAX_ATTENTYPE,MAX_ATTEN), wt_gm1(MAX_ATTENTYPE,MAX_ATTEN)
+      real checkwt, c1, c2, wtgm(MAX_ATTENTYPE,MAX_ATTEN), wt_gm1(MAX_ATTENTYPE,MAX_ATTEN)
 
 c      pause 'inside read input'
 
@@ -47,11 +41,16 @@ c     Open Input PSHA Source/Fault file
       read (20,'( a80)') filein
 c      open (10,file=filein,status='old')
 
+c     Check for version compatibility with hazard code
+        read (20,*) version
+         if (version .ne. 45.2) then
+         write (*,*) 'Incompatible version of Haz45, use Haz45.2'
+         stop 99
+        endif
 
 c     Read in parameters for background grid.
       read (20,*) minlat,maxlat,minlong,maxlong
 
-Cnjg  Added back in read of single maxdist
       read (20,*) maxdist
 
 c     Input Title (not used) 
@@ -59,7 +58,6 @@ c     Input Title (not used)
 
 c     Number of Spectral Periods and Number of attenuation relations types
       read(20,*) nProb, nattentype
-        write (*,'( 2i5)') nProb, nattentype
       
       do iprob=1,nProb
 

@@ -7,9 +7,9 @@ c     Last modified: 8/15   ggm_wt
       
       real*8 haz(MAX_PROB, MAX_ATTENTYPE, MAX_ATTEN, MAX_INTEN)
       real haz_GMC(MAX_NODE, MAX_BR, MAX_INTEN) 
-      real*8 haz1(MAX_INTEN)
+      real*8 haz1(MAX_INTEN), haz2(MAX_INTEN)
       real testInten(MAX_INTEN)
-      integer nInten, jcalc(MAX_ATTENTYPE,MAX_ATTEN), nFlt, iflt
+      integer nInten
       integer iInten, iBR, jj
       character*80 filein, file1
       character*80 dummy
@@ -25,7 +25,7 @@ c     Last modified: 8/15   ggm_wt
       real sum
       integer iPer, nAttenType
       real contrib_min
-      integer iNode, i,  jFlt, kFlt, nNode_GMC, iBR1, iBR2, iBR3, iBR4
+      integer iNode, nNode_GMC, iBR1, iBR2, iBR3, iBR4
       integer nBR_GMC(MAX_NODE)
       integer j, k, j2
       real gm_wt(MAX_ATTENTYPE,MAX_ATTEN)
@@ -34,11 +34,11 @@ c     Last modified: 8/15   ggm_wt
       real hazLevel, GM_ratio(100), GM0, GM1
       integer kAtten(MAX_ATTENTYPE,MAX_MED,MAX_epistemic,MAX_SIGMA,2)
       
-      write (*,*) '*************************'
-      write (*,*) '* Tornado Code for GMC *'
-      write (*,*) '*  compatible with Haz45j  *'
-      write (*,*) '*    , 2015, NAA     *'
-      write (*,*) '*************************'
+      write (*,*) '*****************************'
+      write (*,*) '*    Tornado Code for GMC   *'
+      write (*,*) '*   compatible with Haz45.2 *'
+      write (*,*) '*     August, 2016, NAA     *'
+      write (*,*) '*****************************'
 
       write (*,*) 'Enter the input filename.'
       
@@ -53,18 +53,25 @@ c     Read Input File
       call RdInput ( nInten,  testInten, lgTestInten, nGM_model, nattentype, 
      1       attenType, nProb, iPer, gm_wt, period)
 
+c     Read header
+c      read (31,'( a80)') dummy
+c      write (*,'( a80)') dummy
+c      read (31,'( a80)') dummy
+c      write (*,'( a80)') dummy
+
       nNode_GMC = nAttenType*4
 c     read the weights for the GMC logic tree (for each attenTYpe)
       do iNode=1,nNode_GMC
-        read (31,*) nBR_GMC(iNode), (wt_tree(iNode,iBR), iBR=1,nBR_GMC(iNode))
+        read (31,*,err=200) nBR_GMC(iNode), (wt_tree(iNode,iBR), iBR=1,nBR_GMC(iNode))
       enddo
         
 c     Read in the nodes for GMC as given in the input file
       read (31,'( a80)') dummy        
       do iAttenType=1,nAttenType
        do j=1, nGM_model(iPer, iAttenType) 
+         write (*,'( 2i5)') iAttenType, j
 c        read Median branch, epistemic branch, sigma branch
-         read (31,*) iBR1, iBR2, iBR3, iBR4
+         read (31,*,err=201) iBR1, iBR2, iBR3, iBR4
          kAtten(iAttenType,iBR1, iBR2, iBR3,iBR4) = j
        enddo
       enddo
@@ -72,6 +79,7 @@ c        read Median branch, epistemic branch, sigma branch
       read (31,'( a80)') file1
       write (*,'( a80)') file1
       open (43,file=file1,status='unknown')
+      write (43,'( ''45.2. GMC Tornado v45.2 output'')')
       write (43,'( ''GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture'')')
       write (43,'( 2x,''period index, period: '',i5, f10.4)') iPer, period
       write (43,'( 2x,''Min contribution to GM uncertainty: '',f10.5)') contrib_min
@@ -86,7 +94,7 @@ c     Loop Over Number of  sites d
 
 c      Read the out6 file
        write (*,'( 2x,''reading logic tree file out6'')')
-       call read_logichaz_out6 ( haz, nProb,nAttenType, nGM_model, nInten)
+       call read_logichaz_out6 ( haz, nProb,nAttenType, nGM_model, nInten, iSIte)
        write (*,'( 2x,''out of logichaz_out6'')')
      
 c      Compute the mean hazard for each atten TYPE
@@ -98,6 +106,11 @@ c      Compute the mean hazard for each atten TYPE
            enddo
            hazMean1(jType,iInten) = sum
          enddo
+c         do iAtten=1,nGM_Model(iPer,jType)
+c           write (44,'( i5,20e12.3)') jtype, gm_wt(jType,iAtten), 
+c     1      (haz(iPer,jType,iAtten,iInten),iInten=1,nInten )
+c         enddo
+c         write (44,'( i5,20e12.3)') jtype, (hazMean1(jType,iInten), iInten=1,nInten)
        enddo
 
 c       Compute the mean total hazard
@@ -110,6 +123,7 @@ c       Compute the mean total hazard
              hazMean(iInten) = hazMean(iInten) + hazMean1(jType,iInten)
            enddo
          enddo
+c         write (44,'( 5x,20e12.3)') (hazMean(iInten), iInten=1,nInten)
 
 
 c      Initialize hazard array for sensitivity
@@ -187,31 +201,35 @@ c              write (*,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
          enddo
             
 c        Compute the hazard for the modified weights         
-            do iInten=1,nInten
-              sum = 0.
-              do iAtten=1,nGM_model(iPer,iAttenType)
-                sum = sum + haz(iPer,iAttenType,iAtten,iInten)*wt1(iAttenType,iAtten)
-              enddo
-              haz1(iInten) = sum
+         do iInten=1,nInten
+           sum = 0.
+           do iAtten=1,nGM_model(iPer,iAttenType)
+             sum = sum + haz(iPer,iAttenType,iAtten,iInten)*wt1(iAttenType,iAtten)
+c             if ( iInten .eq. 7 ) write (45,'( 4i5,f10.4,e12.4)') inode, ibr, iAtten,iAttenType,
+c     1         wt1(iAttenType,iAtten)  , haz(iPer,iAttenType,iAtten,iInten)  
+           enddo
+           haz1(iInten) = sum
+           haz2(iInten) = sum
 
-c             Add the mean hazard from the other source types to get the total hazard                               
-               do kType=1,nAttenType
-                 if ( kType .ne. iAttenType ) then
-c                   write (*,'( 4i5,2e12.4)') iNode, iBR, iInten, ktype, haz1(iInten),  hazMean1(kType,iInten)
-                   haz1(iInten) =   haz1(iInten)  + hazMean1(kType,iInten)
-                 endif
-               enddo
-            enddo   
-          
-            do iInten=1,nInten
-              haz_GMC(iNode,iBR,iInten) = sngl(haz1(iInten))
-            enddo
+c          Add the mean hazard from the other source types to get the total hazard                               
+           do kType=1,nAttenType
+             if ( kType .ne. iAttenType ) then
+                haz2(iInten) =   haz2(iInten)  + hazMean1(kType,iInten)
+             endif
+           enddo
+         enddo   
+
+         do iInten=1,nInten
+              haz_GMC(iNode,iBR,iInten) = sngl(haz2(iInten))
          enddo
+         
+        enddo
        enddo
 
 c       Write out sensitivity hazard curves for GMC
         read (31,'( a80)') file1
         open (42,file=file1,status='unknown')
+        write (42,'( ''45.2 GMC Tornado v45.2 sensitivity output'')')
         write (42,'( ''GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture'')')
 
         write (42,'( 2x,'' Z values:'')')
@@ -281,7 +299,12 @@ c         Check if the range is large enought to be relevant
 
       write (*,*) 
       write (*,*) '*** Tornado Code (45) Completed with Normal Termination ***'
-
       stop
+
+ 200  write (*,'( 2x,''Error in reading the branch weights, iNode'', i5)') iNode
+      stop
+ 201  write (*,'( 2x,''Error in reading the branch indexes, iAttenType, j:'', 2i5)') iAttenType, j
+      stop
+      
       end
 
