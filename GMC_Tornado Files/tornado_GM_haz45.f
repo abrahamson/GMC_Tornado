@@ -1,7 +1,5 @@
       program Tornado_GM_Haz45
 
-c     Last modified: 8/15   ggm_wt
-
       implicit none
       include 'tornado.h'
       
@@ -37,7 +35,7 @@ c     Last modified: 8/15   ggm_wt
       write (*,*) '*****************************'
       write (*,*) '*    Tornado Code for GMC   *'
       write (*,*) '*   compatible with Haz45.2 *'
-      write (*,*) '*     August, 2016, NAA     *'
+      write (*,*) '*     March, 2017, NAA      *'
       write (*,*) '*****************************'
 
       write (*,*) 'Enter the input filename.'
@@ -50,7 +48,7 @@ c     Last modified: 8/15   ggm_wt
       read (31,*) Hazlevel
  
 c     Read Input File
-      call RdInput ( nInten,  testInten, lgTestInten, nGM_model, nattentype, 
+      call RdInput ( nInten, testInten, lgTestInten, nGM_model, nAttenType, 
      1       attenType, nProb, iPer, gm_wt, period)
 
 c     Read header
@@ -60,7 +58,7 @@ c      read (31,'( a80)') dummy
 c      write (*,'( a80)') dummy
 
       nNode_GMC = nAttenType*4
-c     read the weights for the GMC logic tree (for each attenTYpe)
+c     read the weights for the GMC logic tree (for each attenType)
       do iNode=1,nNode_GMC
         read (31,*,err=200) nBR_GMC(iNode), (wt_tree(iNode,iBR), iBR=1,nBR_GMC(iNode))
       enddo
@@ -69,8 +67,8 @@ c     Read in the nodes for GMC as given in the input file
       read (31,'( a80)') dummy        
       do iAttenType=1,nAttenType
        do j=1, nGM_model(iPer, iAttenType) 
-         write (*,'( 2i5)') iAttenType, j
-c        read Median branch, epistemic branch, sigma branch
+c         write (*,'( 2i5)') iAttenType, j
+c        read Median branch, epistemic branch, sigma branch, mixture model branch
          read (31,*,err=201) iBR1, iBR2, iBR3, iBR4
          kAtten(iAttenType,iBR1, iBR2, iBR3,iBR4) = j
        enddo
@@ -87,7 +85,7 @@ c        read Median branch, epistemic branch, sigma branch
       write (43,'( 2x,''Site, Node, GM ratios...'')')
 
       read (31,*) nSite
-      write (*,'( i5)') nSite
+      write (*,*) nSite, ' nSite'
 
 c     Loop Over Number of  sites d
       do 1000 iSite = 1, nSite
@@ -158,7 +156,7 @@ c        Reset the weight for the selected branch to unity and the others to zer
            do iBR3=1,nBR_GMC(3+jj)
             do iBR4=1,nBR_GMC(4+jj)
               jAtten = kAtten(iAttenType,iBR1,iBR2,iBR3,iBR4)
-c              write (*,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
+c              write (44,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
               
               iNode1 = iNode - ( (iNode-1)/4) * 4
               jj = (iAttenType-1) * 4
@@ -194,7 +192,6 @@ c              write (*,'( 6i5)') iAttenType,iBR1,iBR2,iBR3,iBR4, jAtten
                wt1(iAttenType,jAtten) = 0.
               endif
             endif
-
            enddo
           enddo
          enddo
@@ -230,7 +227,7 @@ c       Write out sensitivity hazard curves for GMC
         read (31,'( a80)') file1
         open (42,file=file1,status='unknown')
         write (42,'( ''45.2 GMC Tornado v45.2 sensitivity output'')')
-        write (42,'( ''GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture'')')
+        write (42,'( ''GMC Nodes: 1 = Median, 2 = Epistemic, 3 = Sigma, 4 = Mixture'')')
 
         write (42,'( 2x,'' Z values:'')')
         write(42,'(6x,25f12.4)') (testInten(J2),J2=1,nInten)
@@ -253,14 +250,21 @@ c       Write out sensitivity hazard curves for GMC
 
 c      Interpolate the desired hazard level for tornado plot
 c      First find the GM for the mean hazard, interpolated to desired haz level
+       iFlag = 0
        do iInten=2,nInten
          if ( hazmean(iInten-1) .ge. hazLevel .and. hazmean(iInten) .le. hazLevel ) then
           GM0 = exp( alog(hazLevel / hazmean(iInten-1)) / 
      1                  alog( hazmean(iInten)/ hazmean(iInten-1))
      2                  * alog( testInten(iInten)/testInten(iInten-1) ) + alog(testInten(iInten-1)) )
+         iFlag = 1
          endif
         enddo
-
+         
+         if (iFlag .eq. 0) then 
+           write (*,'(''Hazard level outside of hazard curves'')')
+           stop 99
+         endif
+         
          do iNode=1,nNode_GMC
 
           k = 0

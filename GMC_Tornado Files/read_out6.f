@@ -25,7 +25,7 @@ c      write (65,'( i5,2x,a80)') ifile, file1
 C     Check for version compatibility with hazard code
         read (nwr,*) version
          if (version .ne. 45.2) then
-           write (*,*) 'out3 from incompatible version of Haz45, use Haz45.2'
+           write (*,*) 'out6 from incompatible version of Haz45, use Haz45.2'
            stop 99
          endif
 
