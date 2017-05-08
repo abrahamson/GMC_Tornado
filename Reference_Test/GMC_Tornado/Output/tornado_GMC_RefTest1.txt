@@ -1,0 +1,9 @@
+45.2. GMC Tornado v45.2 output
+GMC Nodes: 1 = Median, 2=Epistemic, 3=Sigma, 4=Mixture
+  period index, period:     1    0.0200
+  Min contribution to GM uncertainty:    0.01000
+  Hazard level:   0.1000E-02
+  Site, Node, GM ratios...
+          1    1     0.933     1.057
+          1    2     0.785     1.060     1.430
+          1    3     1.000     0.899     1.146
