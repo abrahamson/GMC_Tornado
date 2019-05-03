@@ -6,7 +6,6 @@ c -------------------------------------------------------------------
 
 
       real*8 haz(MAX_PROB, MAX_ATTENTYPE, MAX_ATTEN, MAX_INTEN)
-      real version
       integer nInten, nProb, nattenType, nAtten(MAX_PROB,MAX_ATTENTYPE)
       integer iProb, jType, iAtten
       integer iProb1, jType1, iAtten1
@@ -16,18 +15,11 @@ c -------------------------------------------------------------------
                      
 c     Open output file
       read (31,'( a80)') file1
-c      write (65,'( i5,2x,a80)') ifile, file1
+      write (65,'( i5,2x,a80)') ifile, file1
 
       write (*,*) 'Opening output6 file from the hazard runs.'
       write (*,*) file1
       open (nwr,file=file1,status='old')
-
-C     Check for version compatibility with hazard code
-        read (nwr,*) version
-         if (version .ne. 45.2) then
-           write (*,*) 'out6 from incompatible version of Haz45, use Haz45.2'
-           stop 99
-         endif
 
 c currently, only works if nInten is the same for all periods
 c  Fix this later

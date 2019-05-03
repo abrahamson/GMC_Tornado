@@ -4,7 +4,7 @@
       include 'tornado.h'
       integer iAtten(4,MAX_MED,MAX_epistemic,MAX_SIGMA)
       integer nBR_GMC(3), nFlt, attenTYpe(MAX_FLT), nInten, jtype
-      integer iBR1, iBR2, iBR3, kFlt, i, jAtten
+      integer iBR1, iBR2, iBR3, kFlt, i, jAtten,k
       real haz(MAX_INTEN,MAX_ATTEN, MAX_FLT)
       real*8 haz1(MAX_INTEN) 
       real wt1(4,MAX_ATTEN)
