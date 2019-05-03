@@ -253,8 +253,8 @@ c      First find the GM for the mean hazard, interpolated to desired haz level
        iFlag = 0
        do iInten=2,nInten
          if ( hazmean(iInten-1) .ge. hazLevel .and. hazmean(iInten) .le. hazLevel ) then
-          GM0 = exp( alog(hazLevel / hazmean(iInten-1)) / 
-     1                  alog( hazmean(iInten)/ hazmean(iInten-1))
+          GM0 = exp( alog(real(hazLevel / hazmean(iInten-1))) / 
+     1                  alog(real(hazmean(iInten)/ hazmean(iInten-1)))
      2                  * alog( testInten(iInten)/testInten(iInten-1) ) + alog(testInten(iInten-1)) )
          iFlag = 1
          endif
