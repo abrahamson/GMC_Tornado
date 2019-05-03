@@ -28,7 +28,7 @@ build_script:
     - cd build
     - cmake.exe -G "MSYS Makefiles" -DCMAKE_MAKE_PROGRAM=C:/msys64/usr/bin/make.exe -DCMAKE_Fortran_COMPILER=%FC% -DSTATIC=ON ..
     - C:\\msys64\\usr\\bin\\make.exe
-    - 7z a %APPVEYOR_BUILD_FOLDER%\haz-%BUILD%.zip haz_tornado_gmc.exe
+    - 7z a %APPVEYOR_BUILD_FOLDER%\haz_tornado_gmc-%BUILD%.zip haz_tornado_gmc.exe
 
 artifacts:
     - path: haz_tornado_gmc-mingw32.zip
